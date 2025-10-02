@@ -5,7 +5,7 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-1.5+-red.svg)](https://xgboost.readthedocs.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Processo Seletivo - Cientista de Dados Sênior**
+**Demonstração de fluxo de trabalho - Cientista de Dados Sênior**
 
 ---
 
@@ -48,7 +48,7 @@ Este projeto desenvolve um modelo preditivo para otimização de campanhas de ma
 2. **Feature engineering validado** - 3 de 6 novas features no top 11 de importância
 3. **Abordagem business-first** - Threshold otimizado para lucro, não F1-Score
 4. **Análise de sensibilidade abrangente** - Viabilidade testada em múltiplos cenários de custo
-5. **Roadmap pronto para produção** - Plano de 14 semanas com ROI anual de 440%
+5. **Proposta de Roadmap para produção** - Plano de 14 semanas com ROI anual de 440%
 
 ---
 
@@ -69,11 +69,12 @@ Desenvolver um modelo preditivo para:
 2. **Reduzir** custos operacionais mantendo conversões
 3. **Maximizar** lucro (não apenas acurácia ou F1-Score)
 4. Garantir que modelo seja **100% deployável** (zero data leakage)
+5. Prover o artefato do modelo para uso em produção
 
 ### Métricas de Sucesso
 
 **Técnicas:**
-- F1-Score > 0.45 (acima do baseline da indústria ~0.40)
+- F1-Score > 0.45
 - AUC-ROC > 0.78
 - Zero data leakage
 
@@ -105,7 +106,7 @@ Distribuição target: 88.3% NO | 11.7% YES (desbalanceamento 7.5:1)
 | `education` | 4.1% | Imputado com moda por profissão |
 | `job` | 0.6% | Imputado com moda |
 
-**Insight:** Ao invés de tratar 'unknown' como dado faltante, convertemos em **features informativas**. Para `poutcome`, 81% unknown significa "nunca foi contatado antes" - um sinal valioso.
+**Insight:** Ao invés de tratar 'unknown' como dado faltante, converti em **features informativas**. Para `poutcome`, 81% unknown significa "nunca foi contatado antes" - um sinal valioso.
 
 #### Detecção de Outliers (método IQR)
 
@@ -126,8 +127,8 @@ Estratégia: class_weight='balanced' + otimização de threshold
 ### Top Insights da EDA
 
 1. **Demografia**: Aposentados (25% conv.) e estudantes (31% conv.) convertem 2x mais que a média
-2. **Sazonalidade**: Maio, agosto e outubro têm maiores volumes
-3. **Tipo de contato**: Cellular tem taxa 2.6x maior que telephone
+2. **Sazonalidade**: Maio tem maior volume absoluto (~14k contatos), mas março/setembro/dezembro têm taxas de conversão mais altas (46-53%)
+3. **Tipo de contato**: Celular (14.9%) e telephone (13.4%) têm taxas similares; unknown (4.1%) destrói conversão
 4. **Duração da ligação**: Ligações >300s têm conversão 4x maior (mas duration é pós-contato - leakage!)
 5. **Intensidade de campanha**: Mais de 3 contatos reduz conversão significativamente
 
@@ -149,7 +150,7 @@ mode_by_job = df.groupby('job')['education'].apply(lambda x: x.mode()[0])
 df.loc[mask, 'education'] = df.loc[mask, 'job'].map(mode_by_job)
 ```
 
-#### 2. Feature Engineering (25+ Features Criadas)
+#### 2. Feature Engineering (25+ Features Criadas durante as iterações)
 
 ##### Features Originais (V1)
 
@@ -178,7 +179,7 @@ df.loc[mask, 'education'] = df.loc[mask, 'job'].map(mode_by_job)
 
 ##### Novas Features (V2) - Interações e Ponderação Temporal
 
-**1. contact_history_weighted** ⭐
+**1. contact_history_weighted**
 ```python
 def contact_history_score(row):
     if row['pdays'] == -1:
@@ -346,15 +347,15 @@ total_conversions = int(total_customers * test_conversion_rate)
 
 Todas as features agora disponíveis **PRÉ-contato:**
 
-✅ Demografia (idade, profissão, educação, estado civil)  
-✅ Status financeiro (saldo, inadimplência, empréstimos)  
-✅ Dados de campanha **históricos** (previous, pdays, poutcome)  
-✅ Features temporais (mês, dia, trimestre)  
-✅ Features derivadas usando apenas os acima  
-❌ Duração da ligação atual (removido)  
-❌ Resultado da campanha atual (target)
+V Demografia (idade, profissão, educação, estado civil)  
+V Status financeiro (saldo, inadimplência, empréstimos)  
+V Dados de campanha **históricos** (previous, pdays, poutcome)  
+V Features temporais (mês, dia, trimestre)  
+V Features derivadas usando apenas os acima  
+X Duração da ligação atual (removido)  
+X Resultado da campanha atual (target)
 
-**Confiança:** Modelo é 100% deployável.
+**Confiança:** Modelo é deployável, sem contaminações.
 
 ---
 
@@ -384,7 +385,7 @@ Testados 6 algoritmos com class weights balanceados:
 **Selecionado:** XGBoost (mais otimizável que RF, performance comparável)
 
 **Método:** RandomizedSearchCV
-- 50 iterações
+- 100 iterações
 - 5-fold Stratified CV
 - Métrica de otimização: F1-Score
 - Espaço de busca: learning_rate, max_depth, n_estimators, subsample, etc.
@@ -392,8 +393,8 @@ Testados 6 algoritmos com class weights balanceados:
 **Melhores Parâmetros:**
 ```python
 {
-    'subsample': 0.8,
-    'n_estimators': 300,
+    'subsample': 0.6,
+    'n_estimators': 100,
     'min_child_weight': 1,
     'max_depth': 10,
     'learning_rate': 0.01,
@@ -409,7 +410,7 @@ F1-Score (Test): 0.475
 AUC-ROC (Test): 0.803
 ```
 
-**Contexto:** F1=0.475 está **acima da média da indústria** (~0.40-0.45) para este problema sem leakage.
+**Contexto:** F1=0.475 com dataset desbalanceado (7.5:1). Performance realista pela eliminação de features que elevavam o resultado, mas continham leakage.
 
 ---
 
@@ -427,16 +428,16 @@ Combinados 3 métodos para ranking por consenso:
 |------|---------|------|----------|
 | 1 | balance | Original | 3.67 |
 | 2 | month_encoded | Original | 4.00 |
-| 3 | **contact_history_weighted** | **V2** ⭐ | 4.67 |
+| 3 | **contact_history_weighted** | **V2** | 4.67 |
 | 4 | month_number | Original | 5.67 |
 | 5 | previous_success | Original | 7.00 |
 | 6 | pdays | Original | 7.33 |
 | 7 | poutcome_success | Original | 7.67 |
-| 8 | **campaign_density** | **V2** ⭐ | 9.00 |
+| 8 | **campaign_density** | **V2** | 9.00 |
 | 9 | job_encoded | Original | 9.00 |
-| 10 | **timing_score** | **V2** ⭐ | 9.33 |
+| 10 | **timing_score** | **V2** | 9.33 |
 
-**Insight Chave:** 3 de 6 novas features V2 no top 10 (50% de hit rate) - valida abordagem de feature engineering.
+**Insight das iterações:** 3 de 6 novas features V2 no top 10 (50% de hit rate) - valida a feature engineering utilizada durante as iterações.
 
 ---
 
@@ -453,8 +454,8 @@ Usado SHAP (SHapley Additive exPlanations) para interpretabilidade model-agnosti
    - Acionável: Atualizar base de dados - coletar tipo de contato deve ser prioridade #1
 
 2. **month_encoded** (forte positivo para meses específicos)
-   - Maio e agosto mostram maior impacto positivo
-   - Acionável: Concentrar 60% do orçamento em meses de pico
+   - Março e Dezembro mostram maior impacto positivo
+   - Acionável: Concentrar orçamento em meses de pico
 
 3. **balance** (positivo para valores altos)
    - Saldo alto (pontos vermelhos) → SHAP positivo
@@ -465,7 +466,7 @@ Usado SHAP (SHapley Additive exPlanations) para interpretabilidade model-agnosti
    - Sucesso anterior (vermelho) → grande impacto positivo
    - Valida que histórico de sucesso é melhor preditor
 
-5. **contact_history_weighted** (nossa feature V2!)
+5. **contact_history_weighted** (feature V2!)
    - Ponderação temporal adiciona valor interpretável
    - Histórico positivo recente > histórico positivo antigo
 
@@ -539,12 +540,12 @@ Viabilidade do modelo em diferentes cenários de custo/receita:
 
 | Cenário | Custo/Contato | Receita/Conv | Δ Lucro | Viável? |
 |----------|--------------|--------------|----------|---------|
-| **Atual (Otimista)** | R$ 3 | R$ 200 | +R$ 89k | ✅ SIM |
-| **Atual (Realista)** | R$ 5 | R$ 200 | +R$ 4.4k | ✅ SIM |
-| **Vendas Híbridas** | R$ 7 | R$ 200 | +R$ 48k | ✅ SIM |
-| **Vendas Presenciais** | R$ 12 | R$ 200 | +R$ 180k | ✅ SIM |
-| **Produto Básico** | R$ 5 | R$ 150 | -R$ 35k | ❌ NÃO |
-| **Produto Premium** | R$ 5 | R$ 300 | +R$ 92k | ✅ SIM |
+| **Atual (Otimista)** | R$ 3 | R$ 200 | +R$ 89k |  SIM |
+| **Atual (Realista)** | R$ 5 | R$ 200 | +R$ 4.4k |  SIM |
+| **Vendas Híbridas** | R$ 7 | R$ 200 | +R$ 48k |  SIM |
+| **Vendas Presenciais** | R$ 12 | R$ 200 | +R$ 180k |  SIM |
+| **Produto Básico** | R$ 5 | R$ 150 | -R$ 35k |  NÃO |
+| **Produto Premium** | R$ 5 | R$ 300 | +R$ 92k |  SIM |
 
 ### Insights Principais
 
@@ -587,17 +588,19 @@ A detecção rigorosa de leakage e validação com população total garantem qu
    - Grupo A (Controle): 4.5k clientes aleatórios
    - Grupo B (Modelo): 4.5k clientes priorizados por score > 0.27
 3. Executar campanha de 2 semanas
+4. Aplicar análise estatístics pertinente (t test)
 
 **KPIs de Sucesso:**
-- Lucro Grupo B > Grupo A em pelo menos R$ 400 (10% do ganho projetado)
 - Taxa de conversão Grupo B > Grupo A
 - ROI modelo > 380%
 
 **Riscos e Mitigações:**
 - Risco: Modelo performa pior que esperado
   - Mitigação: Rollback imediato, investigar drift de dados
+  - se drift retreinar modelo
 - Risco: Threshold 0.27 não é ótimo na prática
   - Mitigação: Testar múltiplos thresholds (0.24, 0.27, 0.30) em paralelo
+  - Analisar estatisticamente o resultado para comprocação rigorosa
 
 ---
 
@@ -658,7 +661,7 @@ A detecção rigorosa de leakage e validação com população total garantem qu
    - Follow-up automatizado pós-contato
    - Priorização dinâmica da fila de atendimento
 
-**Stack Tecnológico:**
+**Stack Tecnológico (sugestão do Cientista de Dados):**
 - MLOps: MLflow (versionamento de modelos)
 - Monitoring: Prometheus + Grafana
 - Orquestração: Apache Airflow (retreino automático)
@@ -708,28 +711,12 @@ A detecção rigorosa de leakage e validação com população total garantem qu
 
 ### Resultados Alcançados
 
-✅ **Modelo deployável** (F1=0.475, AUC=0.803) - acima da média da indústria  
-✅ **Feature engineering validado** - 3 features V2 no top 10  
-✅ **Zero data leakage** - 3 rodadas de detecção rigorosa  
-✅ **Melhoria de ROI** - 368% → 381% (+13pp)  
-✅ **Viável em múltiplos cenários** - 5 de 6 cenários de custo/receita  
-✅ **Roadmap de produção** - Plano de 14 semanas com ROI anual de 440%  
-
-### Principais Diferenciais
-
-1. **Pensamento crítico** - Detectou e corrigiu leakage iterativamente
-2. **Foco em negócio** - Otimizado para lucro, não apenas F1-Score
-3. **Abordagem prática** - Modelo é 100% deployável, resultados são realistas
-4. **Análise abrangente** - Sensibilidade, interpretabilidade, plano de implementação
-5. **Avaliação honesta** - Reconheceu ganho modesto com justificativa matemática
-
-### Destaques Técnicos
-
-- **F1=0.475** é 20% acima dos resultados típicos da indústria (~0.40) para este problema sem leakage
-- **Detecção de leakage em 3 rodadas** demonstra rigor raramente visto em cases de entrevista
-- **Threshold 0.27** matematicamente justificado pela assimetria de custos 39:1
-- **Feature engineering** com 50% de hit rate (3/6 no top 10)
-- **Business metrics** corretamente projetados para população total (45k clientes)
+**Modelo deployável** (F1=0.475, AUC=0.803) com resultados mensuráveis
+**Feature engineering validado** - 3 features V2 no top 10  
+**Zero data leakage** - 3 rodadas de detecção rigorosa  
+**Melhoria de ROI** - 368% → 381% (+13pp)  
+**Viável facilmente testável para outros cenários** - custo/receita configuráveis  
+**Roadmap de produção** - Plano de 14 semanas com ROI anual de 440% (estimado)
 
 ### Valor Estratégico
 
@@ -737,11 +724,6 @@ O valor do modelo é **incremental mas escalável**:
 - Cenário atual: +R$ 4.4k/mês (R$ 53k/ano)
 - Operações de custo maior: +R$ 180k/ano
 - Com Fases 2+3: +R$ 269k/ano
-
-Mais importante, demonstra:
-- **Capacidade ML end-to-end** - de EDA a roadmap de produção
-- **Rigor técnico** - detecção de leakage, validação, monitoramento
-- **Acumen de negócio** - foco em ROI, análise de sensibilidade, comunicação com stakeholders
 
 ---
 
@@ -806,12 +788,11 @@ jupyter notebook notebooks/
 ### Contato
 
 Para questões ou discussão sobre esta análise:
-- Email: [seu-email]
-- LinkedIn: [seu-linkedin]
-- GitHub: [seu-github]
+- Email: luismoraes.datascience@gmail.com
+- Linked: https://www.linkedin.com/in/luis-felipe-moraes-datascience/
+- GitHub: https://github.com/ODenteAzul
 
 ---
 
-**Última Atualização:** [Data]  
-**Versão:** 1.0  
-**Autor:** [Seu Nome]
+**Última Atualização:** 02/10/2025   
+**Autor:** Luis Felipe de Moraes
