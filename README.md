@@ -1,9 +1,14 @@
-# Análise de Marketing Bancário Português
+# Bank Marketing Campaign - Análise Preditiva
 
-Este repositório contém o trabalho desenvolvido para análise de dados do **Bank Marketing Dataset (Português)** do Kaggle, com foco em explorar insights de campanhas de marketing bancário.
+Repositório de análise de dados do dataset **Bank Marketing (Português)** do Kaggle.  
+O **relatório detalhado** está em [technical_report_md.md](technical_report_md.md).
 
-A **apresentação formal e detalhada** do trabalho está disponível no arquivo:
+## Objetivo
+- Priorizar clientes para campanhas de marketing bancário
+- Maximizar lucro e ROI
+- Garantir modelo deployável e livre de data leakage
 
-- `technical_report_md.md`
-
-O objetivo principal do repositório é **demonstrar o processo completo de análise de marketing bancário**, desde exploração de dados, visualizações, modelagem e insights, de forma organizada e documentada.
+## Contato
+- Luis Felipe de Moraes  
+- [LinkedIn](https://www.linkedin.com/in/luis-felipe-moraes-datascience/)  
+- [GitHub](https://github.com/ODenteAzul)
