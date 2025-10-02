@@ -48,7 +48,7 @@ Este projeto desenvolve um modelo preditivo para otimização de campanhas de ma
 2. **Feature engineering validado** - 3 de 6 novas features no top 11 de importância
 3. **Abordagem business-first** - Threshold otimizado para lucro, não F1-Score
 4. **Análise de sensibilidade abrangente** - Viabilidade testada em múltiplos cenários de custo
-5. **Roadmap pronto para produção** - Plano de 14 semanas com ROI anual de 440%
+5. **Proposta de Roadmap para produção** - Plano de 14 semanas com ROI anual de 440%
 
 ---
 
@@ -69,11 +69,12 @@ Desenvolver um modelo preditivo para:
 2. **Reduzir** custos operacionais mantendo conversões
 3. **Maximizar** lucro (não apenas acurácia ou F1-Score)
 4. Garantir que modelo seja **100% deployável** (zero data leakage)
+5. Prover o artefato do modelo para uso em produção
 
 ### Métricas de Sucesso
 
 **Técnicas:**
-- F1-Score > 0.45 (acima do baseline da indústria ~0.40)
+- F1-Score > 0.45
 - AUC-ROC > 0.78
 - Zero data leakage
 
@@ -105,7 +106,7 @@ Distribuição target: 88.3% NO | 11.7% YES (desbalanceamento 7.5:1)
 | `education` | 4.1% | Imputado com moda por profissão |
 | `job` | 0.6% | Imputado com moda |
 
-**Insight:** Ao invés de tratar 'unknown' como dado faltante, convertemos em **features informativas**. Para `poutcome`, 81% unknown significa "nunca foi contatado antes" - um sinal valioso.
+**Insight:** Ao invés de tratar 'unknown' como dado faltante, converti em **features informativas**. Para `poutcome`, 81% unknown significa "nunca foi contatado antes" - um sinal valioso.
 
 #### Detecção de Outliers (método IQR)
 
@@ -126,8 +127,8 @@ Estratégia: class_weight='balanced' + otimização de threshold
 ### Top Insights da EDA
 
 1. **Demografia**: Aposentados (25% conv.) e estudantes (31% conv.) convertem 2x mais que a média
-2. **Sazonalidade**: Maio, agosto e outubro têm maiores volumes
-3. **Tipo de contato**: Cellular tem taxa 2.6x maior que telephone
+2. **Sazonalidade**: Maio tem maior volume absoluto (~14k contatos), mas março/setembro/dezembro têm taxas de conversão mais altas (46-53%)
+3. **Tipo de contato**: Celular (14.9%) e telephone (13.4%) têm taxas similares; unknown (4.1%) destrói conversão
 4. **Duração da ligação**: Ligações >300s têm conversão 4x maior (mas duration é pós-contato - leakage!)
 5. **Intensidade de campanha**: Mais de 3 contatos reduz conversão significativamente
 
@@ -149,7 +150,7 @@ mode_by_job = df.groupby('job')['education'].apply(lambda x: x.mode()[0])
 df.loc[mask, 'education'] = df.loc[mask, 'job'].map(mode_by_job)
 ```
 
-#### 2. Feature Engineering (25+ Features Criadas)
+#### 2. Feature Engineering (25+ Features Criadas durante as iterações)
 
 ##### Features Originais (V1)
 
@@ -178,7 +179,7 @@ df.loc[mask, 'education'] = df.loc[mask, 'job'].map(mode_by_job)
 
 ##### Novas Features (V2) - Interações e Ponderação Temporal
 
-**1. contact_history_weighted** ⭐
+**1. contact_history_weighted**
 ```python
 def contact_history_score(row):
     if row['pdays'] == -1:
