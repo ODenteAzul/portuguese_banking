@@ -31,3 +31,4 @@ O **relatório detalhado** está em [technical_report_md.md](technical_report_md
 
 ### Outputs
 - `bank_model.pkl` - Modelo serializado
+- Imagens salvas automaticamente em .png
