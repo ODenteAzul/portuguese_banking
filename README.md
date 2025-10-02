@@ -30,5 +30,4 @@ O **relatório detalhado** está em [technical_report_md.md](technical_report_md
 - [`dados/bank-full.csv`](./dados/bank-full.csv) - Dataset completo utilizado na análise
 
 ### Outputs
-- `outputs/figures/` - Gráficos gerados  
-- `outputs/models/` - Modelos serializados
+- `bank_model.pkl` - Modelo serializado
