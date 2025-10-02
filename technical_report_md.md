@@ -5,7 +5,7 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-1.5+-red.svg)](https://xgboost.readthedocs.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Processo Seletivo - Cientista de Dados Sênior**
+**Demonstração de fluxo de trabalho - Cientista de Dados Sênior**
 
 ---
 
